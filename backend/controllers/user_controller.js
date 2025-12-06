@@ -54,6 +54,11 @@ export const register = async (req, res)=>{
     await user.save()
 
     const token = generatetoken(user._id);
+    await sendEmail({
+    to: email,
+    subject: "Welcome to Comforty!",
+    html: `<h2>Hello ${name},</h2><p>Your account was created successfully!</p>`
+});
  res.cookie("token", token, {
         httpOnly: true,
         secure: true,

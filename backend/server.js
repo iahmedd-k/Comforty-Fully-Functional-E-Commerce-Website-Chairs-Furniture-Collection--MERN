@@ -1,3 +1,6 @@
+import dotenv from "dotenv"
+dotenv.config();
+
 import express from "express"
 import cors from "cors"
 import user_routes from "./routes/user_routes.js"
@@ -5,7 +8,9 @@ import order_routes from "./routes/order_routes.js"
 import product_routes from "./routes/product_routes.js"
 import cartRoutes from "./routes/cart_routes.js"
 import adminRoutes from "./routes/admin_routes.js"
+import stripeRoutes from './routes/stripe_routes.js';
 const app = express()
+app.use("/api/stripe", stripeRoutes);
 
 
 app.use(cors());

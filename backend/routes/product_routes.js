@@ -10,14 +10,15 @@ import {
 
 import { authMiddleware } from "../middleware/auth.js";
 import { isAdmin } from "../middleware/admin.js";
+import  upload  from "../middleware/uploadImages.js";
 
 const router = express.Router();
 
 router.get("/", getProducts);
 router.get("/:slug", getProduct);
 
-router.post("/",isAdmin, createProduct);
-router.put("/:slug", isAdmin, updateProduct);
+router.post("/",isAdmin, upload.array("images", 5), createProduct);
+router.put("/:slug", isAdmin,upload.array("images", 5), updateProduct);
 router.delete("/:slug", isAdmin, deleteProduct);
 
 router.post("/:slug/review", authMiddleware, addReview);

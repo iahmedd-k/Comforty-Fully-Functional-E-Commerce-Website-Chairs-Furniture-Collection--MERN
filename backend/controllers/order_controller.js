@@ -1,11 +1,12 @@
 import Order from "../models/order_model.js";
 import { Product } from "../models/product_model.js";
 import { Cart } from "../models/cart_model.js";
+
+
 export const checkout = async (req, res) => {
     try {
         const { shippingAddress, paymentMethod } = req.body;
 
-        // 1️⃣ Get the user's cart
         const cart = await Cart.findOne({ user: req.user._id }).populate("items.product");
         if (!cart || cart.items.length === 0) {
             return res.status(400).json({ message: "Cart is empty" });
@@ -14,19 +15,17 @@ export const checkout = async (req, res) => {
         let totalPrice = 0;
         const orderProducts = [];
 
-        // 2️⃣ Validate stock & calculate total price
         for (const item of cart.items) {
-            const product = await Product.findById(item.product._id);
+            const product = item.product;
 
             if (!product || !product.isAvailable) {
                 return res.status(400).json({ message: `${item.product.name} is not available` });
             }
 
             if (item.quantity > product.stock) {
-                return res.status(400).json({ message: `Not enough stock for ${item.product.name}` });
+                return res.status(400).json({ message: `Not enough stock for ${product.name}` });
             }
 
-            // 3️⃣ Prepare product details for order
             orderProducts.push({
                 product: product._id,
                 quantity: item.quantity,
@@ -36,32 +35,40 @@ export const checkout = async (req, res) => {
             totalPrice += product.price * item.quantity;
         }
 
-        // 4️⃣ Create the order
+        // ▣ 1. Create a PENDING order
         const order = await Order.create({
             user: req.user._id,
             products: orderProducts,
             shippingAddress,
             paymentMethod,
-            totalPrice
+            totalPrice,
+            paymentStatus: "pending",
+            orderStatus: "pending"
         });
 
-        // 5️⃣ Deduct stock from products
-        for (const item of cart.items) {
-            const product = await Product.findById(item.product._id);
-            product.stock -= item.quantity;
-            if (product.stock === 0) product.isAvailable = false;
-            await product.save();
-        }
+        // ▣ 2. Create Stripe PaymentIntent
+       const paymentIntent = await stripe.paymentIntents.create({
+            amount: Math.round(totalPrice * 100),
+            currency: "usd",
+            metadata: {
+                orderId: order._id.toString(),
+                userId: req.user._id.toString()
+            },
+            receipt_email: req.user.email
+        });
 
-        // 6️⃣ Clear the cart
-        cart.items = [];
-        await cart.save();
 
-        res.status(201).json({ message: "Order created successfully", order });
+
+        res.status(200).json({
+            clientSecret: paymentIntent.client_secret,
+            orderId: order._id
+        });
+
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 export const getMyOrders = async (req, res) => {
     try {

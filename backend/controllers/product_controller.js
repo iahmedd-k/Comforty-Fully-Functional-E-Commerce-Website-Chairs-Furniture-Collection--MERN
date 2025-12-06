@@ -1,4 +1,5 @@
 import { Product } from "../models/product_model.js";
+import cloudinary from "../config/cloudinary.js";
 
 export const createProduct = async (req, res) => {
     try {
@@ -8,7 +9,6 @@ export const createProduct = async (req, res) => {
             price,
             slug,
             category,
-            images,
             stock
         } = req.body;
 
@@ -16,6 +16,18 @@ export const createProduct = async (req, res) => {
         if (existing)
             return res.status(400).json({ message: "Product with this slug already exists" });
 
+       if (!req.files || req.files.length === 0)
+      return res.status(400).json({ message: "Images required" });
+
+    const images = [];
+    for (const file of req.files) {
+      const result = await uploadToCloudinary(file.buffer, "comforty/products");
+      images.push({
+        url: result.secure_url,
+        public_id: result.public_id,
+        altText: name
+      });
+    }
         const product = await Product.create({
             name,
             description,
@@ -71,16 +83,18 @@ export const getProducts = async (req, res) => {
             filter.isAvailable = isAvailable === "true";
         }
 
+        // Pagination
         const pageNumber = Number(page);
         const pageSize = Number(limit);
         const skip = (pageNumber - 1) * pageSize;
 
+        // Sorting
         let sortOption = {};
         if (sort) {
-            const [field, order] = sort.split("_");
+            const [field, order] = sort.split("_"); // e.g., price_asc or rating_desc
             sortOption[field] = order === "desc" ? -1 : 1;
         } else {
-            sortOption = { createdAt: -1 };
+            sortOption = { createdAt: -1 }; // default newest first
         }
 
         const totalProducts = await Product.countDocuments(filter);
@@ -103,6 +117,7 @@ export const getProducts = async (req, res) => {
     }
 };
 
+
 export const getProduct = async (req, res) => {
     try {
         const product = await Product.findOne({ slug: req.params.slug })
@@ -118,34 +133,49 @@ export const getProduct = async (req, res) => {
 };
 
 export const updateProduct = async (req, res) => {
-    try {
-        const updates = req.body;
+  try {
+    const { id } = req.params;
+    const product = await Product.findById(id);
+    if (!product) return res.status(404).json({ message: "Product not found" });
 
-        if (updates.stock !== undefined) {
-            updates.isAvailable = updates.stock > 0;
-        }
+    if (req.files && req.files.length > 0) {
+      // delete old images from Cloudinary
+      for (const img of product.images) {
+        await cloudinary.uploader.destroy(img.public_id);
+      }
 
-        const product = await Product.findOneAndUpdate(
-            { slug: req.params.slug },
-            updates,
-            { new: true }
-        );
-
-        if (!product)
-            return res.status(404).json({ message: "Product not found" });
-
-        res.status(200).json({
-            message: "Product updated successfully",
-            product
+      // upload new images
+      const newImages = [];
+      for (const file of req.files) {
+        const result = await uploadToCloudinary(file.buffer, "comforty/products");
+        newImages.push({
+          url: result.secure_url,
+          public_id: result.public_id,
+          altText: product.name
         });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+      }
+
+      product.images = newImages;
     }
+
+    // update other fields
+    Object.assign(product, req.body);
+
+    await product.save();
+    res.json({ message: "Product updated successfully", product });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
+
+
 
 export const deleteProduct = async (req, res) => {
     try {
         const product = await Product.findOneAndDelete({ slug: req.params.slug });
+ for (const img of product.images) {
+            await cloudinary.uploader.destroy(img.public_id);
+        }
 
         if (!product)
             return res.status(404).json({ message: "Product not found" });
