@@ -5,7 +5,7 @@ const routes = express.Router();
 
 
 routes.post('/login', login);
-routes.post('/singup', register)
+routes.post('/signup', register)
 routes.post('/me', authMiddleware, myprofile)
 routes.post('/logout', logout)
 

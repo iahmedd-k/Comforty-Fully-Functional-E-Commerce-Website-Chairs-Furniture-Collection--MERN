@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/fotter';
 
@@ -189,9 +189,10 @@ const Product = () => {
           {/* Products Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-12">
             {filteredProducts.map((product) => (
-              <div
+              <Link
                 key={product.id}
-                className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 p-3 sm:p-4 border border-gray-100"
+                to={`/product/${product.id}`}
+                className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 p-3 sm:p-4 border border-gray-100 group"
               >
                 <div className="relative w-full h-48 sm:h-56 overflow-hidden rounded-lg mb-3">
                   {product.tag && (
@@ -207,7 +208,7 @@ const Product = () => {
                   <img
                     src={product.image}
                     alt={product.title}
-                    className="w-full h-full object-cover rounded-lg hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
                   />
                 </div>
 
@@ -224,11 +225,17 @@ const Product = () => {
                   )}
                 </div>
 
-                <button className="w-full bg-gray-100 hover:bg-teal-500 hover:text-white transition-colors py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium flex items-center justify-center gap-2">
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    // Handle add to cart
+                  }}
+                  className="w-full bg-gray-100 hover:bg-teal-500 hover:text-white transition-colors py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium flex items-center justify-center gap-2"
+                >
                   <span>🛒</span>
                   <span>Add to Cart</span>
                 </button>
-              </div>
+              </Link>
             ))}
           </div>
 

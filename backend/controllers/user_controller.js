@@ -2,6 +2,8 @@
 
 import { User } from "../models/user_model.js";
 import { generatetoken } from "../util/jsonwebtoken.js";
+import { sendEmail } from "../util/sendemail.js";
+import bcrypt from "bcryptjs";
 // user controller
 
 
@@ -31,7 +33,16 @@ const token = generatetoken(user._id)
         maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
-res.status(200).json({message: "Login successful", user, token})
+res.json({
+  message: "Login successful",
+  user: {
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role
+  },
+  token
+});
 }
 };
 

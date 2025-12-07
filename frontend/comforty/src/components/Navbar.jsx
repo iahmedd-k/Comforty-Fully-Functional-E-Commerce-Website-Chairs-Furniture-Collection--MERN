@@ -5,8 +5,13 @@ const Navbar = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [cartCount] = useState();
   const [showCategories, setShowCategories] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const location = useLocation();
   const dropdownRef = useRef(null);
+  const profileMenuRef = useRef(null);
+  
+  // Dummy user state - replace with actual auth state
+  const [user, setUser] = useState(null); // Set to null for logged out, or user object for logged in
 
   const categories = [
     'Wing Chair',
@@ -28,20 +33,24 @@ const Navbar = () => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowCategories(false);
       }
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setShowProfileMenu(false);
+      }
     };
 
-    if (showCategories) {
+    if (showCategories || showProfileMenu) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showCategories]);
+  }, [showCategories, showProfileMenu]);
 
   // Close dropdown when route changes
   useEffect(() => {
     setShowCategories(false);
+    setShowProfileMenu(false);
   }, [location.pathname]);
 
   return (
@@ -123,12 +132,74 @@ const Navbar = () => {
                 </svg>
               </button>
 
-              {/* User Profile */}
-              <button className="text-gray-600 hover:text-gray-800 transition-colors">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </button>
+              {/* User Profile with Popup */}
+              <div className="relative" ref={profileMenuRef}>
+                <button
+                  onClick={() => setShowProfileMenu(!showProfileMenu)}
+                  className="text-gray-600 hover:text-gray-800 transition-colors relative"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </button>
+
+                {/* Profile Menu Popup */}
+                {showProfileMenu && (
+                  <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-lg shadow-lg border-2 border-gray-200 z-50 py-2">
+                    {user ? (
+                      <>
+                        <div className="px-4 py-3 border-b-2 border-gray-200">
+                          <p className="font-medium text-gray-900">{user.name || 'User'}</p>
+                          <p className="text-sm text-gray-600">{user.email || 'user@example.com'}</p>
+                        </div>
+                        <Link
+                          to="/profile"
+                          onClick={() => setShowProfileMenu(false)}
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        >
+                          My Profile
+                        </Link>
+                        <Link
+                          to="/orders"
+                          onClick={() => setShowProfileMenu(false)}
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        >
+                          My Orders
+                        </Link>
+                        <button
+                          onClick={() => {
+                            setUser(null);
+                            setShowProfileMenu(false);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                        >
+                          Logout
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <Link
+                          to="/login"
+                          onClick={() => setShowProfileMenu(false)}
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        >
+                          Login
+                        </Link>
+                        <Link
+                          to="/login"
+                          onClick={() => {
+                            setShowProfileMenu(false);
+                            // You can add state to switch to signup form
+                          }}
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        >
+                          Sign Up
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

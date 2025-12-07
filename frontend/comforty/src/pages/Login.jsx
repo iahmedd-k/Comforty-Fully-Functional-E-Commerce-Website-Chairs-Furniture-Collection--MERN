@@ -17,7 +17,7 @@ const InputField = ({ type, placeholder, id, name, value, onChange }) => (
 );
 
 // -------------------- Sign In Form --------------------
-const SignInForm = ({ signInData, setSignInData, onSubmit }) => (
+const SignInForm = ({ signInData, setSignInData, onSubmit, onForgotPassword }) => (
   <>
     <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">Sign In</h2>
 
@@ -54,7 +54,11 @@ const SignInForm = ({ signInData, setSignInData, onSubmit }) => (
           <span className="text-gray-600">Remember Me</span>
         </label>
 
-        <button className="text-teal-600 hover:underline" type="button">
+        <button
+          type="button"
+          onClick={onForgotPassword}
+          className="text-teal-600 hover:underline"
+        >
           Forget Password
         </button>
       </div>
@@ -123,9 +127,48 @@ const SignUpForm = ({ signUpData, setSignUpData, onSubmit }) => (
   </>
 );
 
+// -------------------- Forgot Password Form --------------------
+const ForgotPasswordForm = ({ onBack, email, setEmail, onSubmit }) => (
+  <>
+    <h2 className="text-2xl font-semibold text-gray-800 mb-2 text-center">Forgot Password</h2>
+    <p className="text-sm text-gray-600 mb-6 text-center">
+      Enter your email address and we'll send you a link to reset your password.
+    </p>
+
+    <form className="space-y-4" onSubmit={onSubmit}>
+      <InputField
+        type="email"
+        placeholder="Email"
+        id="forgot-email"
+        name="forgot-email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+
+      <button
+        type="submit"
+        className="w-full py-3 bg-teal-600 text-white font-medium rounded-lg
+                   hover:bg-teal-700 transition"
+      >
+        Send Reset Link →
+      </button>
+
+      <button
+        type="button"
+        onClick={onBack}
+        className="w-full py-2 text-teal-600 hover:text-teal-700 font-medium text-sm"
+      >
+        ← Back to Sign In
+      </button>
+    </form>
+  </>
+);
+
 // -------------------- Main Component --------------------
 const AuthCard = () => {
   const [isSignIn, setIsSignIn] = useState(true);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
 
   const [signInData, setSignInData] = useState({ email: "", password: "" });
   const [signUpData, setSignUpData] = useState({
@@ -139,12 +182,25 @@ const AuthCard = () => {
     <>
 <Navbar />
     <div className="min-h-screen bg-[#f5f6f7] flex items-center justify-center p-6">
-      <div className="w-full max-w-md bg-white p-10 rounded-2xl shadow-lg border border-gray-200">
-        {isSignIn ? (
+      <div className="w-full max-w-md bg-white p-8 sm:p-10 rounded-2xl shadow-lg border border-gray-200">
+        {showForgotPassword ? (
+          <ForgotPasswordForm
+            onBack={() => setShowForgotPassword(false)}
+            email={forgotPasswordEmail}
+            setEmail={setForgotPasswordEmail}
+            onSubmit={(e) => {
+              e.preventDefault();
+              // Handle forgot password logic here
+              alert(`Password reset link has been sent to ${forgotPasswordEmail}`);
+              setShowForgotPassword(false);
+            }}
+          />
+        ) : isSignIn ? (
           <SignInForm
             signInData={signInData}
             setSignInData={setSignInData}
             onSubmit={(e) => e.preventDefault()}
+            onForgotPassword={() => setShowForgotPassword(true)}
           />
         ) : (
           <SignUpForm
@@ -154,32 +210,34 @@ const AuthCard = () => {
           />
         )}
 
-        {/* Switch Links */}
-        <div className="mt-6 text-center text-sm text-gray-700">
-          {isSignIn ? (
-            <>
-              Don’t have an account?{" "}
-              <button
-                type="button"
-                onClick={() => setIsSignIn(false)}
-                className="text-teal-600 hover:underline font-medium"
-              >
-                Sign Up
-              </button>
-            </>
-          ) : (
-            <>
-              Already have an account?{" "}
-              <button
-                type="button"
-                onClick={() => setIsSignIn(true)}
-                className="text-teal-600 hover:underline font-medium"
-              >
-                Sign In
-              </button>
-            </>
-          )}
-        </div>
+        {/* Switch Links - Only show when not in forgot password mode */}
+        {!showForgotPassword && (
+          <div className="mt-6 text-center text-sm text-gray-700">
+            {isSignIn ? (
+              <>
+                Don't have an account?{" "}
+                <button
+                  type="button"
+                  onClick={() => setIsSignIn(false)}
+                  className="text-teal-600 hover:underline font-medium"
+                >
+                  Sign Up
+                </button>
+              </>
+            ) : (
+              <>
+                Already have an account?{" "}
+                <button
+                  type="button"
+                  onClick={() => setIsSignIn(true)}
+                  className="text-teal-600 hover:underline font-medium"
+                >
+                  Sign In
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </div>
        
 

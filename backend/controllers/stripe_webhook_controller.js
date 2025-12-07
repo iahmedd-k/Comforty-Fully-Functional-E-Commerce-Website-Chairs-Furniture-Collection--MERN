@@ -1,4 +1,4 @@
-import { stripe } from "../config/stripe.js";
+import stripe  from "../config/stripe.js";
 import Order from "../models/order_model.js";
 import { Product } from "../models/product_model.js";
 import {Cart} from "../models/cart_model.js";
