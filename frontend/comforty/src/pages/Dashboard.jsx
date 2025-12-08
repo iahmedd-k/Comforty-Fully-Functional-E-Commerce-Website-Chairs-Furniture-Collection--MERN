@@ -1,48 +1,6 @@
 import React, { useState, useEffect } from 'react';
-
-// Dummy API functions
-const dummyAPI = {
-  getDashboardStats: async () => {
-    return {
-      totalSales: 125430,
-      totalOrders: 1248,
-      totalProducts: 156,
-      totalRevenue: 245890,
-      salesGrowth: 12.5,
-      ordersGrowth: 8.3,
-      revenueGrowth: 15.2,
-    };
-  },
-  getSalesData: async () => {
-    return [
-      { month: 'Jan', sales: 12000 },
-      { month: 'Feb', sales: 19000 },
-      { month: 'Mar', sales: 15000 },
-      { month: 'Apr', sales: 22000 },
-      { month: 'May', sales: 18000 },
-      { month: 'Jun', sales: 25000 },
-    ];
-  },
-  getProducts: async () => {
-    return [
-      { id: 1, name: 'Classic Wing Chair', category: 'Wing Chair', price: 299, stock: 45, sales: 120, status: 'active' },
-      { id: 2, name: 'Oak Wooden Chair', category: 'Wooden Chair', price: 89, stock: 32, sales: 89, status: 'active' },
-      { id: 3, name: 'Ergonomic Desk Chair', category: 'Desk Chair', price: 199, stock: 0, sales: 156, status: 'out_of_stock' },
-      { id: 4, name: 'Leather Recliner', category: 'Recliner', price: 599, stock: 12, sales: 45, status: 'active' },
-      { id: 5, name: 'Modern Dining Chair', category: 'Dining Chair', price: 89, stock: 67, sales: 234, status: 'active' },
-      { id: 6, name: 'Premium Office Chair', category: 'Office Chair', price: 249, stock: 23, sales: 78, status: 'active' },
-    ];
-  },
-  addProduct: async (product) => {
-    return { ...product, id: Date.now(), status: 'active' };
-  },
-  updateProduct: async (id, product) => {
-    return { id, ...product };
-  },
-  deleteProduct: async (id) => {
-    return { success: true, id };
-  },
-};
+import { getProducts, createProduct, updateProduct, deleteProduct } from '../api/products';
+import { getDashboardStats, getAllOrders, updateOrderStatus } from '../api/admin';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('home');
@@ -50,6 +8,7 @@ const Dashboard = () => {
   const [dashboardStats, setDashboardStats] = useState(null);
   const [salesData, setSalesData] = useState([]);
   const [products, setProducts] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -58,7 +17,10 @@ const Dashboard = () => {
     category: '',
     price: '',
     stock: '',
+    description: '',
+    images: [],
   });
+  const [message, setMessage] = useState({ text: '', type: '' }); // type: 'success' | 'error' | ''
 
   useEffect(() => {
     loadDashboardData();
@@ -67,57 +29,303 @@ const Dashboard = () => {
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      const [stats, sales, productsData] = await Promise.all([
-        dummyAPI.getDashboardStats(),
-        dummyAPI.getSalesData(),
-        dummyAPI.getProducts(),
+      const [statsResponse, productsResponse, ordersResponse] = await Promise.all([
+        getDashboardStats(),
+        getProducts(),
+        getAllOrders().catch((error) => {
+          console.error('Error fetching orders:', error);
+          console.error('Error response:', error?.response?.data);
+          console.error('Error status:', error?.response?.status);
+          // Show error message but don't break the dashboard
+          const errorMsg = error?.response?.data?.message || error?.message || 'Failed to load orders. Please check if you are logged in as admin.';
+          setMessage({ 
+            text: errorMsg, 
+            type: 'error' 
+          });
+          setTimeout(() => setMessage({ text: '', type: '' }), 5000);
+          return []; // Return empty array on error
+        }),
       ]);
+      
+      console.log('Orders response:', ordersResponse);
+      console.log('Orders count:', ordersResponse?.length);
+      
+      // Transform backend stats to match UI expectations
+      const stats = {
+        totalSales: statsResponse.totalSales || 0,
+        totalOrders: statsResponse.totalOrders || 0,
+        totalProducts: productsResponse.length || 0,
+        totalRevenue: statsResponse.totalSales || 0,
+        salesGrowth: 0, // Calculate if needed
+        ordersGrowth: 0, // Calculate if needed
+        revenueGrowth: 0, // Calculate if needed
+      };
       setDashboardStats(stats);
-      setSalesData(sales);
-      setProducts(productsData);
+      
+      // Generate sales data from orders (last 6 months)
+      const salesData = generateSalesDataFromOrders(ordersResponse);
+      setSalesData(salesData);
+      
+      // getProducts already returns the products array
+      const productsData = Array.isArray(productsResponse) ? productsResponse : [];
+      
+      // normalize products for UI
+      const normalized = productsData.map((p) => ({
+        id: p._id || p.slug || Date.now(),
+        slug: p.slug,
+        name: p.name,
+        category: p.category,
+        price: p.price,
+        stock: p.stock,
+        images: p.images || [],
+        sales: p.sales || 0,
+        status: p.stock > 0 ? 'active' : 'out_of_stock',
+      }));
+      setProducts(normalized);
+      
+      // Ensure orders is an array
+      const ordersArray = Array.isArray(ordersResponse) ? ordersResponse : [];
+      console.log('Setting orders:', ordersArray);
+      console.log('Orders array length:', ordersArray.length);
+      if (ordersArray.length > 0) {
+        console.log('First order sample:', ordersArray[0]);
+      }
+      setOrders(ordersArray);
     } catch (error) {
       console.error('Error loading data:', error);
+      setMessage({ text: 'Failed to load dashboard data. Please try again.', type: 'error' });
+      setTimeout(() => setMessage({ text: '', type: '' }), 5000);
     } finally {
       setLoading(false);
     }
   };
 
+  // Helper function to generate sales data from orders
+  const generateSalesDataFromOrders = (orders) => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const salesByMonth = {};
+    
+    // Initialize all months with 0
+    months.forEach(month => {
+      salesByMonth[month] = 0;
+    });
+    
+    // Calculate sales from orders
+    if (Array.isArray(orders)) {
+      orders.forEach(order => {
+        if (order.createdAt) {
+          const date = new Date(order.createdAt);
+          const month = months[date.getMonth()];
+          if (month && order.totalPrice) {
+            salesByMonth[month] = (salesByMonth[month] || 0) + order.totalPrice;
+          }
+        }
+      });
+    }
+    
+    // Return last 6 months
+    const currentMonth = new Date().getMonth();
+    const last6Months = [];
+    for (let i = 5; i >= 0; i--) {
+      const monthIndex = (currentMonth - i + 12) % 12;
+      last6Months.push({
+        month: months[monthIndex],
+        sales: salesByMonth[months[monthIndex]] || 0
+      });
+    }
+    
+    return last6Months;
+  };
+
   const handleAddProduct = async (e) => {
     e.preventDefault();
+    setMessage({ text: '', type: '' });
     try {
-      if (editingProduct) {
-        const updated = await dummyAPI.updateProduct(editingProduct.id, productForm);
-        setProducts(products.map(p => p.id === editingProduct.id ? updated : p));
+      // Validation
+      if (!productForm.name || !productForm.category || !productForm.price || productForm.stock === '') {
+        setMessage({ text: 'Please fill in all required fields (Name, Category, Price, Stock)', type: 'error' });
+        setTimeout(() => setMessage({ text: '', type: '' }), 5000);
+        return;
+      }
+
+      const payload = {
+        name: productForm.name.trim(),
+        category: productForm.category,
+        price: Number(productForm.price) || 0,
+        stock: Number(productForm.stock) || 0,
+        description: productForm.description || '',
+      };
+
+      if (payload.price <= 0) {
+        setMessage({ text: 'Price must be greater than 0', type: 'error' });
+        setTimeout(() => setMessage({ text: '', type: '' }), 5000);
+        return;
+      }
+
+      if (payload.stock < 0) {
+        setMessage({ text: 'Stock cannot be negative', type: 'error' });
+        setTimeout(() => setMessage({ text: '', type: '' }), 5000);
+        return;
+      }
+
+      const hasFiles = productForm.images && productForm.images.length > 0 && 
+                       productForm.images[0] instanceof File;
+
+      if (editingProduct && editingProduct.slug) {
+        let response;
+        if (hasFiles) {
+          const fd = new FormData();
+          fd.append('name', payload.name);
+          fd.append('category', payload.category);
+          fd.append('price', String(payload.price));
+          fd.append('stock', String(payload.stock));
+          fd.append('description', payload.description);
+          productForm.images.forEach((file) => {
+            if (file instanceof File) {
+              fd.append('images', file);
+            }
+          });
+          response = await updateProduct(editingProduct.slug, fd);
+        } else {
+          response = await updateProduct(editingProduct.slug, payload);
+        }
+        
+        // createProduct/updateProduct already returns the product object
+        const updated = response;
+        const normalized = {
+          id: updated._id || updated.slug,
+          slug: updated.slug,
+          name: updated.name,
+          category: updated.category,
+          price: updated.price,
+          stock: updated.stock,
+          images: updated.images || [],
+          sales: updated.sales || 0,
+          status: updated.stock > 0 ? 'active' : 'out_of_stock',
+        };
+        setProducts(products.map((p) => (p.slug === editingProduct.slug || p.id === editingProduct.id ? normalized : p)));
+        setMessage({ text: 'Product updated successfully!', type: 'success' });
+        setTimeout(() => setMessage({ text: '', type: '' }), 5000);
       } else {
-        const newProduct = await dummyAPI.addProduct(productForm);
-        setProducts([...products, newProduct]);
+        let response;
+        if (hasFiles) {
+          const fd = new FormData();
+          fd.append('name', payload.name);
+          fd.append('category', payload.category);
+          fd.append('price', String(payload.price));
+          fd.append('stock', String(payload.stock));
+          fd.append('description', payload.description);
+          productForm.images.forEach((file) => {
+            if (file instanceof File) {
+              fd.append('images', file);
+            }
+          });
+          response = await createProduct(fd);
+        } else {
+          response = await createProduct(payload);
+        }
+        
+        // createProduct already returns the product object
+        const created = response;
+        if (!created || !created.slug) {
+          throw new Error('Failed to create product: Invalid response from server');
+        }
+        
+        const normalized = {
+          id: created._id || created.slug || Date.now(),
+          slug: created.slug,
+          name: created.name,
+          category: created.category,
+          price: created.price,
+          stock: created.stock,
+          images: created.images || [],
+          sales: created.sales || 0,
+          status: created.stock > 0 ? 'active' : 'out_of_stock',
+        };
+        setProducts([...products, normalized]);
+        setMessage({ text: 'Product created successfully!', type: 'success' });
+        setTimeout(() => setMessage({ text: '', type: '' }), 5000);
       }
       setShowProductModal(false);
       setEditingProduct(null);
-      setProductForm({ name: '', category: '', price: '', stock: '' });
+      setProductForm({ name: '', category: '', price: '', stock: '', description: '', images: [] });
+      // Reload products to ensure consistency
+      loadDashboardData();
     } catch (error) {
       console.error('Error saving product:', error);
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to save product. Please try again.';
+      setMessage({ text: errorMessage, type: 'error' });
+      setTimeout(() => setMessage({ text: '', type: '' }), 5000);
     }
   };
 
   const handleEditProduct = (product) => {
     setEditingProduct(product);
     setProductForm({
-      name: product.name,
-      category: product.category,
-      price: product.price,
-      stock: product.stock,
+      name: product.name || '',
+      category: product.category || '',
+      price: product.price != null ? String(product.price) : '',
+      stock: product.stock != null ? String(product.stock) : '',
+      description: product.description || '',
+      images: product.images || [],
     });
     setShowProductModal(true);
   };
 
-  const handleDeleteProduct = async (id) => {
-    if (window.confirm('Are you sure you want to delete this product?')) {
+  const reloadOrders = async () => {
+    try {
+      const updatedOrders = await getAllOrders();
+      console.log('Reloaded orders:', updatedOrders);
+      const ordersArray = Array.isArray(updatedOrders) ? updatedOrders : [];
+      setOrders(ordersArray);
+      return ordersArray;
+    } catch (error) {
+      console.error('Error reloading orders:', error);
+      const errorMsg = error?.response?.data?.message || error?.message || 'Failed to reload orders';
+      setMessage({ text: errorMsg, type: 'error' });
+      setTimeout(() => setMessage({ text: '', type: '' }), 5000);
+      return [];
+    }
+  };
+
+  const handleUpdateOrderStatus = async (orderId, newStatus) => {
+    try {
+      await updateOrderStatus(orderId, newStatus);
+      // Reload orders to get updated data
+      await reloadOrders();
+      setMessage({ text: 'Order status updated successfully', type: 'success' });
+      setTimeout(() => setMessage({ text: '', type: '' }), 5000);
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to update order status';
+      setMessage({ text: errorMessage, type: 'error' });
+      setTimeout(() => setMessage({ text: '', type: '' }), 5000);
+      throw error; // Re-throw to let OrdersManagement handle it
+    }
+  };
+
+  const handleDeleteProduct = async (product) => {
+    setMessage({ text: '', type: '' });
+    const identifier = product.slug || product.id;
+    if (!identifier) {
+      setMessage({ text: 'Cannot delete product: Missing identifier', type: 'error' });
+      setTimeout(() => setMessage({ text: '', type: '' }), 5000);
+      return;
+    }
+
+    if (window.confirm(`Are you sure you want to delete "${product.name}"?`)) {
       try {
-        await dummyAPI.deleteProduct(id);
-        setProducts(products.filter(p => p.id !== id));
+        await deleteProduct(identifier);
+        setProducts(products.filter(p => p.id !== product.id && p.slug !== product.slug));
+        setMessage({ text: 'Product deleted successfully!', type: 'success' });
+        setTimeout(() => setMessage({ text: '', type: '' }), 5000);
+        // Reload products to ensure consistency
+        loadDashboardData();
       } catch (error) {
         console.error('Error deleting product:', error);
+        const errorMessage = error?.response?.data?.message || error?.message || 'Failed to delete product. Please try again.';
+        setMessage({ text: errorMessage, type: 'error' });
+        setTimeout(() => setMessage({ text: '', type: '' }), 5000);
       }
     }
   };
@@ -144,7 +352,7 @@ const Dashboard = () => {
 
     switch (activeTab) {
       case 'home':
-        return <DashboardHome stats={dashboardStats} salesData={salesData} />;
+        return <DashboardHome stats={dashboardStats} salesData={salesData} products={products} orders={orders} />;
       case 'products':
         return (
           <ProductsManagement
@@ -163,11 +371,11 @@ const Dashboard = () => {
       case 'sales':
         return <SalesManagement salesData={salesData} stats={dashboardStats} />;
       case 'orders':
-        return <OrdersManagement />;
+        return <OrdersManagement orders={orders} onUpdateOrder={handleUpdateOrderStatus} onMessage={setMessage} onReload={reloadOrders} />;
       case 'analytics':
         return <AnalyticsView salesData={salesData} stats={dashboardStats} />;
       default:
-        return <DashboardHome stats={dashboardStats} salesData={salesData} />;
+        return <DashboardHome stats={dashboardStats} salesData={salesData} products={products} orders={orders} />;
     }
   };
 
@@ -224,7 +432,20 @@ const Dashboard = () => {
       <div className={`transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-20'}`}>
         {/* Top Bar */}
         <div className="bg-white border-b-2 border-gray-200 px-6 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900 capitalize">{activeTab}</h1>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold text-gray-900 capitalize">{activeTab}</h1>
+            {message.text && (
+              <p className={`text-xs mt-1 ${
+                message.type === 'success' 
+                  ? 'text-green-600' 
+                  : message.type === 'error'
+                  ? 'text-red-600'
+                  : 'text-gray-600'
+              }`}>
+                {message.text}
+              </p>
+            )}
+          </div>
           <div className="flex items-center space-x-4">
             <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
               <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -252,12 +473,12 @@ const Dashboard = () => {
           product={productForm}
           editing={!!editingProduct}
           categories={categories}
-          onChange={(field, value) => setProductForm({ ...productForm, [field]: value })}
+            onChange={(field, value) => setProductForm({ ...productForm, [field]: value })}
           onSave={handleAddProduct}
           onClose={() => {
             setShowProductModal(false);
             setEditingProduct(null);
-            setProductForm({ name: '', category: '', price: '', stock: '' });
+              setProductForm({ name: '', category: '', price: '', stock: '', description: '', images: [] });
           }}
         />
       )}
@@ -266,7 +487,7 @@ const Dashboard = () => {
 };
 
 // Dashboard Home Component
-const DashboardHome = ({ stats, salesData }) => {
+const DashboardHome = ({ stats, salesData, products, orders }) => {
   if (!stats) return null;
 
   const statCards = [
@@ -303,8 +524,8 @@ const DashboardHome = ({ stats, salesData }) => {
         <h2 className="text-xl font-bold text-gray-900 mb-6">Sales Overview</h2>
         <div className="h-64 flex items-end justify-between space-x-2">
           {salesData.map((data, index) => {
-            const maxSales = Math.max(...salesData.map(d => d.sales));
-            const height = (data.sales / maxSales) * 100;
+            const maxSales = Math.max(...salesData.map(d => d.sales), 1);
+            const height = maxSales > 0 ? (data.sales / maxSales) * 100 : 0;
             return (
               <div key={index} className="flex-1 flex flex-col items-center">
                 <div
@@ -324,36 +545,62 @@ const DashboardHome = ({ stats, salesData }) => {
         <div className="bg-white rounded-xl border-2 border-gray-200 p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Orders</h2>
           <div className="space-y-3">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="font-medium text-gray-900">Order #{1000 + i}</p>
-                  <p className="text-sm text-gray-600">Customer Name</p>
+            {orders && orders.length > 0 ? (
+              orders.slice(0, 5).map((order) => (
+                <div key={order._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <p className="font-medium text-gray-900">Order #{order._id?.slice(-6) || 'N/A'}</p>
+                    <p className="text-sm text-gray-600">
+                      {order.user?.name || order.user?.email || 'Guest'}
+                    </p>
+                  </div>
+                  <span className="text-sm font-medium text-teal-600">
+                    ${order.totalPrice?.toFixed(2) || '0.00'}
+                  </span>
                 </div>
-                <span className="text-sm font-medium text-teal-600">$299</span>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-sm text-gray-500 text-center py-4">No recent orders</p>
+            )}
           </div>
         </div>
 
         <div className="bg-white rounded-xl border-2 border-gray-200 p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Low Stock Alert</h2>
           <div className="space-y-3">
-            {[
-              { name: 'Ergonomic Desk Chair', stock: 0 },
-              { name: 'Premium Office Chair', stock: 12 },
-              { name: 'Leather Recliner', stock: 5 },
-            ].map((item, i) => (
-              <div key={i} className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
-                <div>
-                  <p className="font-medium text-gray-900">{item.name}</p>
-                  <p className="text-sm text-red-600">Stock: {item.stock}</p>
-                </div>
-                <button className="text-sm font-medium text-teal-600 hover:text-teal-700">
-                  Restock
-                </button>
-              </div>
-            ))}
+            {products && products.filter(p => p.stock <= 5 && p.stock > 0).length > 0 ? (
+              products
+                .filter(p => p.stock <= 5 && p.stock > 0)
+                .slice(0, 5)
+                .map((item) => (
+                  <div key={item.id} className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                    <div>
+                      <p className="font-medium text-gray-900">{item.name}</p>
+                      <p className="text-sm text-red-600">Stock: {item.stock}</p>
+                    </div>
+                    <button className="text-sm font-medium text-teal-600 hover:text-teal-700">
+                      Restock
+                    </button>
+                  </div>
+                ))
+            ) : products && products.filter(p => p.stock === 0).length > 0 ? (
+              products
+                .filter(p => p.stock === 0)
+                .slice(0, 5)
+                .map((item) => (
+                  <div key={item.id} className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                    <div>
+                      <p className="font-medium text-gray-900">{item.name}</p>
+                      <p className="text-sm text-red-600">Out of Stock</p>
+                    </div>
+                    <button className="text-sm font-medium text-teal-600 hover:text-teal-700">
+                      Restock
+                    </button>
+                  </div>
+                ))
+            ) : (
+              <p className="text-sm text-gray-500 text-center py-4">No low stock items</p>
+            )}
           </div>
         </div>
       </div>
@@ -420,7 +667,7 @@ const ProductsManagement = ({ products, onAdd, onEdit, onDelete }) => {
                         </svg>
                       </button>
                       <button
-                        onClick={() => onDelete(product.id)}
+                        onClick={() => onDelete(product)}
                         className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -530,8 +777,8 @@ const SalesManagement = ({ salesData, stats }) => {
           <h3 className="text-lg font-bold text-gray-900 mb-4">Monthly Sales</h3>
           <div className="h-48 flex items-end justify-between space-x-2">
             {salesData.map((data, index) => {
-              const maxSales = Math.max(...salesData.map(d => d.sales));
-              const height = (data.sales / maxSales) * 100;
+              const maxSales = Math.max(...salesData.map(d => d.sales), 1);
+              const height = maxSales > 0 ? (data.sales / maxSales) * 100 : 0;
               return (
                 <div key={index} className="flex-1 flex flex-col items-center">
                   <div
@@ -550,16 +797,99 @@ const SalesManagement = ({ salesData, stats }) => {
 };
 
 // Orders Management Component
-const OrdersManagement = () => {
-  const orders = [
-    { id: 1001, customer: 'John Doe', product: 'Classic Wing Chair', amount: 299, status: 'completed', date: '2024-01-15' },
-    { id: 1002, customer: 'Jane Smith', product: 'Oak Wooden Chair', amount: 89, status: 'pending', date: '2024-01-16' },
-    { id: 1003, customer: 'Mike Johnson', product: 'Ergonomic Desk Chair', amount: 199, status: 'processing', date: '2024-01-17' },
+const OrdersManagement = ({ orders, onUpdateOrder, onMessage, onReload }) => {
+  const [updatingOrderId, setUpdatingOrderId] = useState(null);
+  const [localMessages, setLocalMessages] = useState({});
+
+  const handleStatusChange = async (orderId, newStatus) => {
+    setUpdatingOrderId(orderId);
+    setLocalMessages({ ...localMessages, [orderId]: '' });
+    
+    try {
+      await onUpdateOrder(orderId, newStatus);
+      setLocalMessages({ ...localMessages, [orderId]: { text: 'Status updated successfully', type: 'success' } });
+      setTimeout(() => {
+        setLocalMessages(prev => {
+          const updated = { ...prev };
+          delete updated[orderId];
+          return updated;
+        });
+      }, 5000);
+    } catch (error) {
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to update status';
+      setLocalMessages({ ...localMessages, [orderId]: { text: errorMessage, type: 'error' } });
+      setTimeout(() => {
+        setLocalMessages(prev => {
+          const updated = { ...prev };
+          delete updated[orderId];
+          return updated;
+        });
+      }, 5000);
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  };
+
+  if (!orders) {
+    return (
+      <div className="space-y-6">
+        <h2 className="text-2xl font-bold text-gray-900">Orders Management</h2>
+        <div className="bg-white rounded-xl border-2 border-gray-200 p-12 text-center">
+          <p className="text-gray-500 mb-2">Loading orders...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!Array.isArray(orders) || orders.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-gray-900">Orders Management</h2>
+          {onReload && (
+            <button
+              onClick={async () => {
+                await onReload();
+              }}
+              className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors text-sm font-medium"
+            >
+              Refresh Orders
+            </button>
+          )}
+        </div>
+        <div className="bg-white rounded-xl border-2 border-gray-200 p-12 text-center">
+          <p className="text-gray-500 mb-2">No orders found</p>
+          <p className="text-sm text-gray-400">
+            No orders in the database yet. Orders will appear here once customers place orders.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const statusOptions = [
+    { value: 'pending', label: 'Pending' },
+    { value: 'processing', label: 'Processing' },
+    { value: 'shipped', label: 'Shipped' },
+    { value: 'delivered', label: 'Delivered' },
+    { value: 'cancelled', label: 'Cancelled' },
   ];
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-900">Orders Management</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-gray-900">Orders Management</h2>
+        {onReload && (
+          <button
+            onClick={async () => {
+              await onReload();
+            }}
+            className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors text-sm font-medium"
+          >
+            Refresh Orders
+          </button>
+        )}
+      </div>
 
       <div className="bg-white rounded-xl border-2 border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
@@ -575,28 +905,69 @@ const OrdersManagement = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {orders.map((order) => (
-                <tr key={order.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">#{order.id}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{order.customer}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{order.product}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">${order.amount}</td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`px-2 py-1 text-xs font-medium rounded ${
-                        order.status === 'completed'
-                          ? 'bg-green-100 text-green-800'
-                          : order.status === 'processing'
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}
-                    >
-                      {order.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{order.date}</td>
-                </tr>
-              ))}
+              {orders.map((order) => {
+                const orderDate = order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A';
+                const customerName = order.user?.name || order.user?.email || 'Guest';
+                const firstProduct = order.products && order.products.length > 0 
+                  ? (order.products[0].product?.name || 'Multiple items')
+                  : 'N/A';
+                const currentStatus = order.orderStatus || order.status || 'pending';
+                const orderMessage = localMessages[order._id];
+                
+                return (
+                  <tr key={order._id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                      #{order._id?.slice(-6) || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{customerName}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {order.products?.length > 1 
+                        ? `${firstProduct} + ${order.products.length - 1} more`
+                        : firstProduct}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      ${order.totalPrice?.toFixed(2) || '0.00'}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="space-y-1">
+                        <select
+                          value={currentStatus}
+                          onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                          disabled={updatingOrderId === order._id}
+                          className={`text-xs font-medium rounded px-2 py-1 border transition-colors ${
+                            currentStatus === 'delivered' || currentStatus === 'completed'
+                              ? 'bg-green-50 text-green-800 border-green-200'
+                              : currentStatus === 'cancelled'
+                              ? 'bg-red-50 text-red-800 border-red-200'
+                              : currentStatus === 'processing' || currentStatus === 'shipped'
+                              ? 'bg-yellow-50 text-yellow-800 border-yellow-200'
+                              : 'bg-gray-50 text-gray-800 border-gray-200'
+                          } ${updatingOrderId === order._id ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-80'}`}
+                        >
+                          {statusOptions.map(option => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                        {orderMessage && (
+                          <p className={`text-xs ${
+                            orderMessage.type === 'success' 
+                              ? 'text-green-600' 
+                              : 'text-red-600'
+                          }`}>
+                            {orderMessage.text}
+                          </p>
+                        )}
+                        {updatingOrderId === order._id && (
+                          <p className="text-xs text-gray-500">Updating...</p>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{orderDate}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -698,6 +1069,16 @@ const ProductModal = ({ product, editing, categories, onChange, onSave, onClose 
             </select>
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+            <textarea
+              value={product.description}
+              onChange={(e) => onChange('description', e.target.value)}
+              className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-teal-500"
+              rows={3}
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Price</label>
@@ -719,6 +1100,32 @@ const ProductModal = ({ product, editing, categories, onChange, onSave, onClose 
                 required
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Images {!editing && <span className="text-gray-500 text-xs">(Optional)</span>}
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => {
+                const files = Array.from(e.target.files || []);
+                onChange('images', files);
+              }}
+              className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-teal-500"
+            />
+            {product.images && product.images.length > 0 && (
+              <div className="mt-2 space-y-1">
+                {product.images.map((f, i) => (
+                  <div key={i} className="text-xs text-gray-600">
+                    {f instanceof File ? f.name : (typeof f === 'string' ? f : f.url || f.public_id || 'image')}
+                  </div>
+                ))}
+              </div>
+            )}
+            <p className="mt-1 text-xs text-gray-500">You can upload up to 5 images</p>
           </div>
 
           <div className="flex items-center space-x-3 pt-4">

@@ -7,7 +7,8 @@ const productSchema = new mongoose.Schema({
   },
   description: {
     type: String,
-    required: true,
+    required: false,
+    default: '',
   },
   price: {
     type: Number,
@@ -17,7 +18,7 @@ const productSchema = new mongoose.Schema({
 
   slug: {
     type: String,
-    required: true,
+    required: false,
     unique: true,
   },
 
@@ -45,7 +46,7 @@ const productSchema = new mongoose.Schema({
     }
  ],
 
-  reveiws: [
+  reviews: [
 
     {
         user:{
@@ -58,7 +59,7 @@ const productSchema = new mongoose.Schema({
     }
   ],
       averageRating: { type: Number, default: 0 },
-      stock: {
+  stock: {
     type: Number,
     required: true,
     min: 0,

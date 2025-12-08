@@ -1,6 +1,9 @@
 import React, { useState } from "react";
-import Footer from "../components/fotter";
+import Footer from "../components/Fotter";
 import Navbar from "../components/Navbar";
+import { useNavigate } from "react-router-dom";
+
+import  {login, register, forgotPassword}  from "../api/auth.js";
 
 // -------------------- Input Component --------------------
 const InputField = ({ type, placeholder, id, name, value, onChange }) => (
@@ -177,6 +180,58 @@ const AuthCard = () => {
     password: "",
     confirm: "",
   });
+const navigate = useNavigate();
+
+
+  const handleLogin = async (e) => {
+  e.preventDefault();
+
+  try {
+    const res = await login(signInData);
+
+    // Save token
+    localStorage.setItem("token", res.data.token);
+
+    alert("Login successful!");
+        navigate("/");
+
+  } catch (error) {
+    alert(error.response?.data?.message || "Login failed");
+  }
+};
+
+const handleRegister = async (e) => {
+  e.preventDefault();
+
+  if (signUpData.password !== signUpData.confirm) {
+    return alert("Passwords do not match");
+  }
+
+  try {
+    await register({
+      name: signUpData.name,
+      email: signUpData.email,
+      password: signUpData.password
+    });
+
+    alert("Account created successfully!");
+    setIsSignIn(true); // redirect to login form
+  } catch (error) {
+    alert(error.response?.data?.message || "Registration failed");
+  }
+};
+
+const handleForgotPassword = async (e) => {
+  e.preventDefault();
+
+  try {
+    await forgotPassword(forgotPasswordEmail);
+    alert("Password reset link sent!");
+    setShowForgotPassword(false);
+  } catch (error) {
+    alert(error.response?.data?.message || "Error sending reset email");
+  }
+};
 
   return (
     <>
@@ -188,25 +243,20 @@ const AuthCard = () => {
             onBack={() => setShowForgotPassword(false)}
             email={forgotPasswordEmail}
             setEmail={setForgotPasswordEmail}
-            onSubmit={(e) => {
-              e.preventDefault();
-              // Handle forgot password logic here
-              alert(`Password reset link has been sent to ${forgotPasswordEmail}`);
-              setShowForgotPassword(false);
-            }}
+            onSubmit={handleForgotPassword}
           />
         ) : isSignIn ? (
           <SignInForm
             signInData={signInData}
             setSignInData={setSignInData}
-            onSubmit={(e) => e.preventDefault()}
+            onSubmit={handleLogin}
             onForgotPassword={() => setShowForgotPassword(true)}
           />
         ) : (
           <SignUpForm
             signUpData={signUpData}
             setSignUpData={setSignUpData}
-            onSubmit={(e) => e.preventDefault()}
+            onSubmit={handleRegister}
           />
         )}
 
@@ -215,7 +265,7 @@ const AuthCard = () => {
           <div className="mt-6 text-center text-sm text-gray-700">
             {isSignIn ? (
               <>
-                Don't have an account?{" "}
+                Don't have an account? {" "}
                 <button
                   type="button"
                   onClick={() => setIsSignIn(false)}
@@ -226,7 +276,7 @@ const AuthCard = () => {
               </>
             ) : (
               <>
-                Already have an account?{" "}
+                Already have an account? {" "}
                 <button
                   type="button"
                   onClick={() => setIsSignIn(true)}
@@ -239,10 +289,9 @@ const AuthCard = () => {
           </div>
         )}
       </div>
-       
 
     </div>
-       <Footer />
+    <Footer />
     </>
   );
 };

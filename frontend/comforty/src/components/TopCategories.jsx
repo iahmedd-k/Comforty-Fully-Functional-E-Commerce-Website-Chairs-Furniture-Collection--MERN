@@ -95,26 +95,26 @@ export default function TopCategories() {
   };
 
   return (
-    <section className="py-14 bg-white relative">
-      <div className="max-w-7xl mx-auto px-6">
+    <section className="py-8 sm:py-12 md:py-14 bg-white relative">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6">
 
         {/* Title + Buttons */}
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-3xl font-bold text-gray-900">Top Categories</h2>
+        <div className="flex items-center justify-between mb-6 sm:mb-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Top Categories</h2>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={() => scroll("left")}
-              className="w-10 h-10 flex items-center justify-center bg-gray-200 rounded-full hover:bg-[#007580] hover:text-white transition"
+              className="w-8 sm:w-10 h-8 sm:h-10 flex items-center justify-center bg-gray-200 rounded-full hover:bg-[#007580] hover:text-white transition"
             >
-              <FiChevronLeft className="text-xl" />
+              <FiChevronLeft className="text-lg sm:text-xl" />
             </button>
 
             <button
               onClick={() => scroll("right")}
-              className="w-10 h-10 flex items-center justify-center bg-gray-200 rounded-full hover:bg-[#007580] hover:text-white transition"
+              className="w-8 sm:w-10 h-8 sm:h-10 flex items-center justify-center bg-gray-200 rounded-full hover:bg-[#007580] hover:text-white transition"
             >
-              <FiChevronRight className="text-xl" />
+              <FiChevronRight className="text-lg sm:text-xl" />
             </button>
           </div>
         </div>
@@ -128,12 +128,12 @@ export default function TopCategories() {
         {/* Infinite Slider */}
         <div
           ref={sliderRef}
-          className="flex gap-6 overflow-x-auto scrollbar-hide scroll-smooth"
+          className="flex gap-3 sm:gap-4 md:gap-6 overflow-x-auto scrollbar-hide scroll-smooth"
         >
           {infiniteList.map((cat, i) => (
             <div
               key={i}
-              className="min-w-[260px] h-[320px] relative rounded-2xl overflow-hidden shadow-lg cursor-pointer group"
+              className="min-w-[200px] sm:min-w-[240px] md:min-w-[260px] h-[250px] sm:h-[280px] md:h-[320px] relative rounded-xl sm:rounded-2xl overflow-hidden shadow-lg cursor-pointer group"
             >
               {/* Image */}
               <img
@@ -143,9 +143,9 @@ export default function TopCategories() {
               />
 
               {/* Gradient bottom */}
-       <div class="absolute bottom-0 left-0 w-full bg-black/70 text-white p-3 rounded-b-xl">
-  <h2 class="text-lg font-semibold">Wing Chair</h2>
-  <p class="text-sm">3,584 Products</p>
+       <div className="absolute bottom-0 left-0 w-full bg-black/70 text-white p-2 sm:p-3 rounded-b-xl">
+  <h2 className="text-sm sm:text-base md:text-lg font-semibold">{cat.title}</h2>
+  <p className="text-xs sm:text-sm">{cat.count}</p>
 </div>
 
             </div>

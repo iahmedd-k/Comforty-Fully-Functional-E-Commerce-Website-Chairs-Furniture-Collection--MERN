@@ -17,9 +17,9 @@ const router = express.Router();
 router.get("/", getProducts);
 router.get("/:slug", getProduct);
 
-router.post("/",isAdmin, upload.array("images", 5), createProduct);
-router.put("/:slug", isAdmin,upload.array("images", 5), updateProduct);
-router.delete("/:slug", isAdmin, deleteProduct);
+router.post("/", authMiddleware, isAdmin, upload.array("images", 5), createProduct);
+router.put("/:slug", authMiddleware, isAdmin, upload.array("images", 5), updateProduct);
+router.delete("/:slug", authMiddleware, isAdmin, deleteProduct);
 
 router.post("/:slug/review", authMiddleware, addReview);
 

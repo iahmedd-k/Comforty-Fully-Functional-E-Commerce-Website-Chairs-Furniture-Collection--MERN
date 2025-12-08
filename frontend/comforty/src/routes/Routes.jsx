@@ -7,6 +7,8 @@ import ProductDetails from "../pages/ProductDetails";
 import AuthCard from "../pages/Login";
 import Dashboard from "../pages/Dashboard";
 import Profile from "../pages/Profile";
+import Cart from "../pages/Cart";
+import Checkout from "../pages/Checkout";
 
 function Approutes() {
     return (
@@ -20,6 +22,8 @@ function Approutes() {
                 <Route path="/login" element={<AuthCard />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/cart" element={<Cart />} />
+                <Route path="/checkout" element={<Checkout />} />
             </Routes>
         </BrowserRouter>
     )

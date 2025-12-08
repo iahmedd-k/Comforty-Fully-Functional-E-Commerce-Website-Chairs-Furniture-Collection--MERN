@@ -2,123 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/fotter';
-
-// Dummy API function
-const dummyAPI = {
-  getProductById: async (id) => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    const allProducts = {
-      1: {
-        id: 1,
-        name: "Classic Wing Chair",
-        slug: "classic-wing-chair",
-        description: "Experience timeless elegance with our Classic Wing Chair. Crafted with premium materials and attention to detail, this chair combines comfort and style. Perfect for your living room, study, or office space. Features high-quality upholstery, sturdy construction, and ergonomic design for maximum comfort during long sitting sessions.",
-        price: 299,
-        oldPrice: 399,
-        category: "Wing Chair",
-        stock: 45,
-        isAvailable: true,
-        averageRating: 4.5,
-        images: [
-          { url: "https://images.unsplash.com/photo-1540574163026-643ea20ade25?w=800", altText: "Classic Wing Chair Front View" },
-          { url: "https://images.unsplash.com/photo-1505692794403-34d4982f7676?w=800", altText: "Classic Wing Chair Side View" },
-          { url: "https://images.unsplash.com/photo-1503602642458-232111445657?w=800", altText: "Classic Wing Chair Detail" },
-          { url: "https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=800", altText: "Classic Wing Chair Back View" },
-        ],
-        reviews: [
-          { id: 1, userName: "John Smith", rating: 5, comment: "Absolutely love this chair! Very comfortable and looks great in my living room.", createdAt: "2024-01-10" },
-          { id: 2, userName: "Sarah Johnson", rating: 4, comment: "Great quality and fast shipping. The chair is sturdy and well-made.", createdAt: "2024-01-08" },
-          { id: 3, userName: "Mike Davis", rating: 5, comment: "Perfect addition to my home office. Highly recommend!", createdAt: "2024-01-05" },
-        ],
-        specifications: {
-          material: "Premium Fabric",
-          dimensions: "32\" W x 34\" D x 40\" H",
-          weight: "45 lbs",
-          color: "Beige",
-          warranty: "2 Years",
-        },
-      },
-      2: {
-        id: 2,
-        name: "Modern Wing Chair",
-        slug: "modern-wing-chair",
-        description: "A contemporary take on the classic wing chair design. This modern piece features sleek lines, premium materials, and exceptional comfort. Ideal for modern living spaces, it seamlessly blends style with functionality.",
-        price: 349,
-        oldPrice: null,
-        category: "Wing Chair",
-        stock: 32,
-        isAvailable: true,
-        averageRating: 4.7,
-        images: [
-          { url: "https://images.unsplash.com/photo-1505692794403-34d4982f7676?w=800", altText: "Modern Wing Chair" },
-          { url: "https://images.unsplash.com/photo-1540574163026-643ea20ade25?w=800", altText: "Modern Wing Chair Detail" },
-        ],
-        reviews: [
-          { id: 1, userName: "Emily Brown", rating: 5, comment: "Beautiful design and very comfortable!", createdAt: "2024-01-12" },
-        ],
-        specifications: {
-          material: "Leather",
-          dimensions: "33\" W x 35\" D x 41\" H",
-          weight: "48 lbs",
-          color: "Black",
-          warranty: "3 Years",
-        },
-      },
-      3: {
-        id: 3,
-        name: "Leather Wing Chair",
-        slug: "leather-wing-chair",
-        description: "Luxurious leather wing chair that exudes sophistication. Made from genuine leather with premium craftsmanship, this chair offers unparalleled comfort and durability.",
-        price: 449,
-        oldPrice: 549,
-        category: "Wing Chair",
-        stock: 18,
-        isAvailable: true,
-        averageRating: 4.8,
-        images: [
-          { url: "https://images.unsplash.com/photo-1503602642458-232111445657?w=800", altText: "Leather Wing Chair" },
-        ],
-        reviews: [
-          { id: 1, userName: "Robert Wilson", rating: 5, comment: "Premium quality leather and excellent craftsmanship.", createdAt: "2024-01-15" },
-        ],
-        specifications: {
-          material: "Genuine Leather",
-          dimensions: "34\" W x 36\" D x 42\" H",
-          weight: "52 lbs",
-          color: "Brown",
-          warranty: "5 Years",
-        },
-      },
-    };
-    
-    return allProducts[id] || allProducts[1];
-  },
-  getRelatedProducts: async (category, excludeId) => {
-    await new Promise(resolve => setTimeout(resolve, 200));
-    
-    const relatedProducts = {
-      "Wing Chair": [
-        { id: 2, name: "Modern Wing Chair", price: 349, oldPrice: null, tag: "New", image: "https://images.unsplash.com/photo-1505692794403-34d4982f7676?w=600", slug: "modern-wing-chair" },
-        { id: 3, name: "Leather Wing Chair", price: 449, oldPrice: 549, tag: "Sales", image: "https://images.unsplash.com/photo-1503602642458-232111445657?w=600", slug: "leather-wing-chair" },
-        { id: 4, name: "Fabric Wing Chair", price: 279, oldPrice: null, tag: null, image: "https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=600", slug: "fabric-wing-chair" },
-        { id: 5, name: "Vintage Wing Chair", price: 329, oldPrice: null, tag: "New", image: "https://images.unsplash.com/photo-1549187774-b4e9b0445b06?w=600", slug: "vintage-wing-chair" },
-      ],
-      "Wooden Chair": [
-        { id: 7, name: "Oak Wooden Chair", price: 89, oldPrice: 119, tag: "Sales", image: "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=600", slug: "oak-wooden-chair" },
-        { id: 8, name: "Teak Wooden Chair", price: 129, oldPrice: null, tag: "New", image: "https://images.unsplash.com/photo-1505691723518-36a8f3be8071?w=600", slug: "teak-wooden-chair" },
-        { id: 9, name: "Pine Wooden Chair", price: 79, oldPrice: null, tag: null, image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600", slug: "pine-wooden-chair" },
-      ],
-    };
-    
-    const products = relatedProducts[category] || [];
-    return products.filter(p => p.id !== excludeId).slice(0, 4);
-  },
-};
+import { getProductBySlug, getProducts, addReview } from '../api/products';
+import { addToCart } from '../api/cart';
+import { addToWishlist, removeFromWishlist, isInWishlist } from '../api/wishlist';
 
 const ProductDetails = () => {
-  const { id } = useParams();
+  const { id } = useParams(); // This is actually the slug
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
@@ -126,6 +15,9 @@ const ProductDetails = () => {
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('description');
+  const [wishlisted, setWishlisted] = useState(false);
+  const [message, setMessage] = useState({ text: '', type: '' });
+  const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' });
 
   useEffect(() => {
     loadProduct();
@@ -134,13 +26,49 @@ const ProductDetails = () => {
   const loadProduct = async () => {
     setLoading(true);
     try {
-      const productData = await dummyAPI.getProductById(parseInt(id));
-      setProduct(productData);
+      // Fetch product by slug
+      const productData = await getProductBySlug(id);
+      
+      // Normalize product data for UI
+      const normalizedProduct = {
+        _id: productData._id,
+        id: productData._id || productData.slug,
+        slug: productData.slug,
+        name: productData.name,
+        description: productData.description || '',
+        price: productData.price,
+        oldPrice: null, // Add if you have discount prices in backend
+        category: productData.category,
+        stock: productData.stock || 0,
+        isAvailable: productData.isAvailable !== false,
+        averageRating: productData.averageRating || 0,
+        images: productData.images || [],
+        reviews: productData.reviews || [],
+        specifications: productData.specifications || {},
+      };
+      
+      setProduct(normalizedProduct);
       setSelectedImage(0);
       
-      // Load related products
-      const related = await dummyAPI.getRelatedProducts(productData.category, productData.id);
+      // Load related products from same category
+      const allProducts = await getProducts({ category: normalizedProduct.category });
+      const related = allProducts
+        .filter(p => p.slug !== normalizedProduct.slug && p._id !== normalizedProduct._id)
+        .slice(0, 4)
+        .map(p => ({
+          id: p._id || p.slug,
+          slug: p.slug,
+          name: p.name,
+          price: p.price,
+          oldPrice: null,
+          tag: p.stock <= 10 ? 'Sales' : null,
+          image: p.images && p.images.length > 0 ? p.images[0].url : 'https://via.placeholder.com/600',
+        }));
+      
       setRelatedProducts(related);
+      
+      // Check if product is in wishlist
+      setWishlisted(isInWishlist(normalizedProduct._id || normalizedProduct.id));
     } catch (error) {
       console.error('Error loading product:', error);
     } finally {
@@ -155,9 +83,32 @@ const ProductDetails = () => {
     });
   };
 
-  const handleAddToCart = () => {
-    // Add to cart logic here
-    alert(`Added ${quantity} ${product.name} to cart!`);
+  const handleAddToCart = async () => {
+    try {
+      const productId = product._id || product.id;
+      await addToCart(productId, quantity);
+      setMessage({ text: `Added ${quantity} ${product.name} to cart!`, type: 'success' });
+      setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      const errorMessage = error?.response?.data?.message || 'Failed to add to cart. Please login.';
+      setMessage({ text: errorMessage, type: 'error' });
+      setTimeout(() => setMessage({ text: '', type: '' }), 5000);
+    }
+  };
+
+  const handleWishlistToggle = () => {
+    const productId = product._id || product.id;
+    if (wishlisted) {
+      removeFromWishlist(productId);
+      setWishlisted(false);
+      setMessage({ text: 'Removed from wishlist', type: 'success' });
+    } else {
+      addToWishlist(product);
+      setWishlisted(true);
+      setMessage({ text: 'Added to wishlist', type: 'success' });
+    }
+    setTimeout(() => setMessage({ text: '', type: '' }), 3000);
   };
 
   if (loading) {
@@ -216,11 +167,19 @@ const ProductDetails = () => {
             <div className="space-y-4">
               {/* Main Image */}
               <div className="relative bg-[#F0F2F3] rounded-2xl sm:rounded-3xl border-2 border-gray-200 overflow-hidden aspect-square">
-                <img
-                  src={product.images[selectedImage]?.url || product.images[0]?.url}
-                  alt={product.images[selectedImage]?.altText || product.name}
-                  className="w-full h-full object-cover"
-                />
+                {product.images && product.images.length > 0 ? (
+                  <img
+                    src={product.images[selectedImage]?.url || product.images[0]?.url}
+                    alt={product.images[selectedImage]?.altText || product.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-400">
+                    <svg className="w-24 h-24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                )}
                 {product.oldPrice && (
                   <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-lg text-sm font-bold">
                     -{discount}%
@@ -229,7 +188,7 @@ const ProductDetails = () => {
               </div>
 
               {/* Thumbnail Images */}
-              {product.images.length > 1 && (
+              {product.images && product.images.length > 1 && (
                 <div className="grid grid-cols-4 gap-3 sm:gap-4">
                   {product.images.map((image, index) => (
                     <button
@@ -243,7 +202,7 @@ const ProductDetails = () => {
                     >
                       <img
                         src={image.url}
-                        alt={image.altText}
+                        alt={image.altText || product.name}
                         className="w-full h-full object-cover"
                       />
                     </button>
@@ -254,6 +213,14 @@ const ProductDetails = () => {
 
             {/* Product Info */}
             <div className="space-y-4 sm:space-y-6">
+              {message.text && (
+                <div className={`p-3 rounded-lg text-sm ${
+                  message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                }`}>
+                  {message.text}
+                </div>
+              )}
+              
               <div>
                 <p className="text-sm text-teal-600 font-medium mb-2">{product.category}</p>
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
@@ -359,11 +326,18 @@ const ProductDetails = () => {
                     </svg>
                     <span>Add to Cart</span>
                   </button>
-                  <button className="px-6 py-3 border-2 border-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center space-x-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <button 
+                    onClick={handleWishlistToggle}
+                    className={`px-6 py-3 border-2 font-medium rounded-lg transition-colors flex items-center justify-center space-x-2 ${
+                      wishlisted 
+                        ? 'border-red-300 bg-red-50 text-red-600 hover:bg-red-100' 
+                        : 'border-gray-200 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <svg className="w-5 h-5" fill={wishlisted ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                     </svg>
-                    <span>Wishlist</span>
+                    <span>{wishlisted ? 'Wishlisted' : 'Wishlist'}</span>
                   </button>
                 </div>
               </div>
@@ -427,16 +401,20 @@ const ProductDetails = () => {
               {activeTab === 'specifications' && (
                 <div className="space-y-4">
                   <h3 className="text-xl font-bold text-gray-900 mb-4">Specifications</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {Object.entries(product.specifications).map(([key, value]) => (
-                      <div key={key} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <span className="text-sm font-medium text-gray-700 capitalize">
-                          {key.replace(/([A-Z])/g, ' $1').trim()}:
-                        </span>
-                        <span className="text-sm text-gray-900">{value}</span>
-                      </div>
-                    ))}
-                  </div>
+                  {product.specifications && Object.keys(product.specifications).length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {Object.entries(product.specifications).map(([key, value]) => (
+                        <div key={key} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <span className="text-sm font-medium text-gray-700 capitalize">
+                            {key.replace(/([A-Z])/g, ' $1').trim()}:
+                          </span>
+                          <span className="text-sm text-gray-900">{value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-600">No specifications available for this product.</p>
+                  )}
                 </div>
               )}
 
@@ -466,31 +444,94 @@ const ProductDetails = () => {
                   </div>
 
                   <div className="space-y-4">
-                    {product.reviews.map((review) => (
-                      <div key={review.id} className="border-b-2 border-gray-100 pb-4 last:border-0">
-                        <div className="flex items-start justify-between mb-2">
-                          <div>
-                            <p className="font-medium text-gray-900">{review.userName}</p>
-                            <div className="flex items-center space-x-1 mt-1">
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <svg
-                                  key={star}
-                                  className={`w-4 h-4 ${
-                                    star <= review.rating ? 'text-yellow-400' : 'text-gray-300'
-                                  }`}
-                                  fill="currentColor"
-                                  viewBox="0 0 20 20"
-                                >
-                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                </svg>
-                              ))}
+                    {product.reviews && product.reviews.length > 0 ? (
+                      product.reviews.map((review, index) => {
+                        const reviewDate = review.createdAt 
+                          ? new Date(review.createdAt).toLocaleDateString() 
+                          : 'N/A';
+                        const userName = review.user?.name || review.userName || 'Anonymous';
+                        
+                        return (
+                          <div key={review._id || index} className="border-b-2 border-gray-100 pb-4 last:border-0">
+                            <div className="flex items-start justify-between mb-2">
+                              <div>
+                                <p className="font-medium text-gray-900">{userName}</p>
+                                <div className="flex items-center space-x-1 mt-1">
+                                  {[1, 2, 3, 4, 5].map((star) => (
+                                    <svg
+                                      key={star}
+                                      className={`w-4 h-4 ${
+                                        star <= (review.rating || 0) ? 'text-yellow-400' : 'text-gray-300'
+                                      }`}
+                                      fill="currentColor"
+                                      viewBox="0 0 20 20"
+                                    >
+                                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                    </svg>
+                                  ))}
+                                </div>
+                              </div>
+                              <span className="text-xs text-gray-500">{reviewDate}</span>
                             </div>
+                            <p className="text-gray-600 text-sm mt-2">{review.comment || 'No comment provided'}</p>
                           </div>
-                          <span className="text-xs text-gray-500">{review.createdAt}</span>
-                        </div>
-                        <p className="text-gray-600 text-sm mt-2">{review.comment}</p>
+                        );
+                      })
+                    ) : (
+                      <p className="text-gray-600 text-center py-8">No reviews yet. Be the first to review this product!</p>
+                    )}
+                  </div>
+
+                  {/* Add review form */}
+                  <div className="mt-6 border-t pt-6">
+                    <h4 className="text-lg font-medium mb-3">Write a review</h4>
+                    <form
+                      onSubmit={async (e) => {
+                        e.preventDefault();
+                        try {
+                          await addReview(product.slug, reviewForm);
+                          setMessage({ text: 'Review submitted', type: 'success' });
+                          setReviewForm({ rating: 5, comment: '' });
+                          // refresh product to show new review
+                          await loadProduct();
+                          setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+                        } catch (err) {
+                          console.error('Error submitting review:', err);
+                          const errMsg = err?.response?.data?.message || 'Failed to submit review';
+                          setMessage({ text: errMsg, type: 'error' });
+                          setTimeout(() => setMessage({ text: '', type: '' }), 5000);
+                        }
+                      }}
+                      className="space-y-3"
+                    >
+                      <div>
+                        <label className="text-sm text-gray-700">Rating</label>
+                        <select
+                          value={reviewForm.rating}
+                          onChange={(e) => setReviewForm({ ...reviewForm, rating: Number(e.target.value) })}
+                          className="block mt-1 w-28 px-3 py-2 border-2 border-gray-200 rounded-lg"
+                        >
+                          {[5,4,3,2,1].map((r) => (
+                            <option key={r} value={r}>{r} Star{r>1?'s':''}</option>
+                          ))}
+                        </select>
                       </div>
-                    ))}
+
+                      <div>
+                        <label className="text-sm text-gray-700">Comment</label>
+                        <textarea
+                          value={reviewForm.comment}
+                          onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
+                          className="w-full mt-1 px-3 py-2 border-2 border-gray-200 rounded-lg"
+                          rows={4}
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <button type="submit" className="px-4 py-2 bg-teal-500 text-white rounded-lg">Submit Review</button>
+                      </div>
+                    </form>
                   </div>
                 </div>
               )}
@@ -507,7 +548,7 @@ const ProductDetails = () => {
                 {relatedProducts.map((relatedProduct) => (
                   <Link
                     key={relatedProduct.id}
-                    to={`/product/${relatedProduct.id}`}
+                    to={`/product/${relatedProduct.slug || relatedProduct.id}`}
                     className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 p-3 sm:p-4 border border-gray-100 group"
                   >
                     <div className="relative w-full h-48 sm:h-56 overflow-hidden rounded-lg mb-3">

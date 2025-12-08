@@ -1,4 +1,7 @@
 export const isAdmin = (req, res, next) => {
+    console.log('[admin] req.user:', req.user);
+    console.log('[admin] req.user?.role:', req.user?.role);
+    
     if (!req.user) {
         return res.status(401).json({ message: "Not authenticated" });
     }
