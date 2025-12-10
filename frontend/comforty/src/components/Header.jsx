@@ -9,94 +9,80 @@ const Header = () => {
   return (
     <div className="bg-white">
       {/* Hero Section */}
-      <div
-        className="relative overflow-hidden bg-[#F0F2F3] rounded-2xl sm:rounded-3xl border-[#000000] border-2 mx-2 sm:mx-4 md:mx-6 lg:mx-auto my-4 sm:my-6 lg:my-10"
-        style={{ maxWidth: 'calc(100% - 1rem)', width: '100%' }}
-      >
-        <div className="w-full px-4 sm:px-6 md:px-8 py-8 sm:py-12 md:py-16 lg:py-24">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 md:gap-10 lg:gap-12 items-center">
-            {/* Left Content */}
-            <div className="space-y-4 sm:space-y-6 md:space-y-8 flex flex-col justify-center order-2 lg:order-1">
+      <div className="relative overflow-hidden bg-[#F0F2F3] rounded-2xl sm:rounded-3xl border-2 border-black mx-4 sm:mx-6 md:mx-8 lg:mx-12 my-6 sm:my-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
+          {/* Left Content */}
+          <div className="flex flex-col justify-center p-8 sm:p-10 md:p-14 lg:p-20 min-h-[350px] sm:min-h-[450px] lg:min-h-[620px]">
+            <div className="space-y-6 sm:space-y-8 md:space-y-10">
               <div>
-                <p className="text-xs sm:text-sm font-medium text-gray-500 tracking-wider uppercase mb-2 sm:mb-3 md:mb-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-400 tracking-widest uppercase mb-4 sm:mb-6">
                   WELCOME TO CHAIRY
                 </p>
-                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-snug sm:leading-tight">
+                <h1 className="text-4xl sm:text-5xl md:text-5xl lg:text-6xl font-black text-black leading-tight tracking-tight">
                   Best Furniture Collection For Your Interior.
                 </h1>
               </div>
-              <button className="inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 bg-teal-500 text-white text-sm sm:text-base font-medium rounded-lg hover:bg-teal-600 transition-colors group w-fit">
+              <button className="inline-flex items-center px-8 py-4 bg-teal-500 text-white font-semibold rounded-md hover:bg-teal-600 transition w-fit gap-3 text-base">
                 Shop Now
-                <svg
-                  className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
               </button>
             </div>
+          </div>
 
-            {/* Right Content - Chair Image and Background */}
-           <div className="relative h-64 sm:h-72 md:h-80 lg:h-96 xl:h-full flex items-center justify-center order-1 lg:order-2">
-
-              {/* 1. Background Shape Image (The lighter circle/blob) */}
-              <img
-                src="/BG Shapes.png"
-                alt="Background Shapes"
-                className="absolute w-64 sm:w-72 md:w-80 lg:w-96 h-auto object-contain z-10 opacity-60 sm:opacity-70 lg:opacity-75" 
-                style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
-              />
-
-              {/* 2. Chair Image - Positioned on top of the background shape */}
-              <img
-                src="/Product Image.png"
-                alt="Chair"
-                className="absolute w-48 sm:w-56 md:w-64 lg:w-72 h-auto object-contain z-20"
-                style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
-              />
-
-              {/* Discount Badge - Positioned absolutely relative to the container */}
-              <div className="absolute bg-white rounded-full w-16 sm:w-20 h-16 sm:h-20 flex flex-col items-center justify-center shadow-lg z-30 animate-bounce-slow"
-                 style={{ top: '5%', right: '5%', transform: 'none' }}>
-                <span className="text-red-500 font-bold text-lg sm:text-xl">54%</span>
-                <span className="text-gray-500 text-xs">Discount</span>
-              </div>
+          {/* Right Content - Chair Image */}
+          <div className="relative flex items-center justify-center min-h-[350px] sm:min-h-[450px] lg:min-h-[620px] overflow-hidden">
+            {/* Background Shape */}
+            <img
+              src="/BG Shapes.png"
+              alt="Background"
+              className="absolute w-80 sm:w-96 lg:w-[520px] h-auto opacity-80"
+            />
+            {/* Chair Image */}
+            <img
+              src="/Product Image.png"
+              alt="Chair"
+              className="relative w-72 sm:w-96 lg:w-[480px] h-auto z-10"
+            />
+            {/* Discount Badge */}
+            <div className="absolute top-12 right-12 bg-white rounded-full w-24 h-24 flex flex-col items-center justify-center shadow-2xl z-20">
+              <span className="text-red-500 font-bold text-2xl">54%</span>
+              <span className="text-gray-400 text-xs tracking-wide">Discount</span>
             </div>
           </div>
+        </div>
 
-          {/* Navigation Arrows */}
-          <button
-            onClick={prevSlide}
-            className="hidden sm:flex absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 w-10 sm:w-12 h-10 sm:h-12 bg-white rounded-full shadow-lg items-center justify-center hover:bg-gray-50 transition-colors"
-          >
-            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
+        {/* Navigation Arrows */}
+        <button
+          onClick={prevSlide}
+          className="hidden sm:flex absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-lg items-center justify-center hover:bg-gray-100 transition z-20"
+        >
+          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
 
-          <button
-            onClick={nextSlide}
-            className="hidden sm:flex absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 w-10 sm:w-12 h-10 sm:h-12 bg-white rounded-full shadow-lg items-center justify-center hover:bg-gray-50 transition-colors"
-          >
-            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+        <button
+          onClick={nextSlide}
+          className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-lg items-center justify-center hover:bg-gray-100 transition z-20"
+        >
+          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
 
-          {/* Slide Indicators */}
-          <div className="absolute bottom-4 sm:bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2">
-            {[0, 1, 2].map((index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentSlide(index)}
-                className={`w-2 sm:w-3 h-2 sm:h-3 rounded-full transition-colors ${
-                  index === currentSlide ? 'bg-teal-500' : 'bg-gray-300'
-                }`}
-              />
-            ))}
-          </div>
+        {/* Slide Indicators */}
+        <div className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+          {[0, 1, 2].map((index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentSlide(index)}
+              className={`h-2 rounded-full transition ${
+                index === currentSlide ? 'bg-teal-500 w-6' : 'bg-gray-300 w-2'
+              }`}
+            />
+          ))}
         </div>
       </div>
 
