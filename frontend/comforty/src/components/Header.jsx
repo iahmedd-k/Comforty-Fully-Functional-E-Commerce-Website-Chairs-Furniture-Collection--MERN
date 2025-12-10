@@ -8,7 +8,7 @@ const Header = () => {
 
   return (
     <div className="bg-white">
-      {/* Hero Section */}
+      
       <div className="relative overflow-hidden bg-[#F0F2F3] rounded-2xl sm:rounded-3xl border-2 border-black mx-4 sm:mx-6 md:mx-8 lg:mx-12 my-6 sm:my-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
           {/* Left Content */}
