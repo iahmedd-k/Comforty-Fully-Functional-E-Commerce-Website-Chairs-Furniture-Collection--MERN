@@ -7,7 +7,6 @@ export default function Footer() {
     <footer className="w-full bg-gray-900 text-gray-300">
       <div className="max-w-screen-xl mx-auto px-6 lg:px-12 py-16 grid grid-cols-1 md:grid-cols-4 gap-8">
 
-        {/* ABOUT */}
         <div>
           <div className="flex items-center gap-2 mb-4">
             <span className="text-teal-500 text-3xl">🛋️</span>
