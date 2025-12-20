@@ -14,9 +14,9 @@ import dbconnect from "./config/db.js";
 import { sendEmail } from "./util/sendemail.js";
 const app = express()
 app.use("/api/stripe", stripeRoutes);
+// put your url 
 
-
-app.use(cors({ origin: process.env.CLIENT_URL || "http://localhost:5174", credentials: true }));
+app.use(cors({ origin: process.env.CLIENT_URL || "http://localhost:5173", credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 
