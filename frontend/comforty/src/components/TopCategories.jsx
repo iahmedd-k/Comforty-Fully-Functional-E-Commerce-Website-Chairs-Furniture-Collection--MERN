@@ -5,7 +5,7 @@ const categories = [
   {
     id: 1,
     title: "Wing Chair",
-    count: "3,584 Products",
+    count: "150 Products",
     image:
       "https://images.unsplash.com/photo-1540574163026-643ea20ade25?auto=format&w=1200&q=80",
   },
@@ -23,13 +23,7 @@ const categories = [
     image:
       "https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&w=1200&q=80",
   },
-  {
-    id: 4,
-    title: "Park Bench",
-    count: "154 Products",
-    image:
-      "https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?auto=format&w=1200&q=80",
-  },
+  
   {
     id: 5,
     title: "Office Chair",
@@ -37,13 +31,7 @@ const categories = [
     image:
       "https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&w=1200",
   },
-  {
-    id: 6,
-    title: "Dining Chair",
-    count: "520 Products",
-    image:
-      "https://images.unsplash.com/photo-1493666438817-866a91353ca9?auto=format&w=1200",
-  },
+  
   {
     id: 7,
     title: "Recliner",
