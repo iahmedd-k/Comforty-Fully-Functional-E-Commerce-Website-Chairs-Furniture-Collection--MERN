@@ -24,3 +24,4 @@ router.delete("/:slug", authMiddleware, isAdmin, deleteProduct);
 router.post("/:slug/review", authMiddleware, addReview);
 
 export default router;
+// prdoucts routes responsible for all product routes
