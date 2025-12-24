@@ -8,3 +8,7 @@ const router = express.Router();
 router.get("/dashboard", authMiddleware, isAdmin, getAdminDashboard);
 
 export default router;
+
+
+
+// admin routes her
