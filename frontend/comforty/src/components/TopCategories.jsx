@@ -44,7 +44,6 @@ const categories = [
 export default function TopCategories() {
   const sliderRef = useRef(null);
 
-  // Duplicate list for infinite scrolling
   const infiniteList = [...categories, ...categories, ...categories];
 
   useEffect(() => {
